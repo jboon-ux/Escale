@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Escale — votre assistant voyage privé</title>
+<meta name="description" content="Restaurants, bars, hébergements, activités ou voyage complet : Escale vous pose les bonnes questions et vous propose une sélection vérifiée en direct, dans n'importe quelle ville.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Crect%20width%3D%2248%22%20height%3D%2248%22%20rx%3D%2212%22%20fill%3D%22%23111111%22/%3E%3Cpath%20d%3D%22M12%2019.5L18.5%2013H36v22H18.5L12%2028.5z%22%20fill%3D%22%23F5D547%22/%3E%3Ccircle%20cx%3D%2218.5%22%20cy%3D%2224%22%20r%3D%222.4%22%20fill%3D%22%23111111%22/%3E%3Cpath%20d%3D%22M24%2020h8M24%2024h8M24%2028h5%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : accueil (héros + étapes) puis assistant (questions + panneau récapitulatif qui passe dessous sur mobile) */
+:root{
+  --bg:#FAFAF7; --surface:#FFFFFF; --surface-2:#F4F4EF; --ink:#111111; --muted:#55554F; --faint:#8C8C85;
+  --line:#E4E4DE; --line-soft:#EFEFEA; --chip-line:#CFCFC8;
+  --accent:#111111; --accent-ink:#5C4A00; --accent-soft:#F5D547; --on-accent:#F5D547; --disabled:#D8D8D2;
+  --hl:#F5D547; --feat-bg:#F5D547; --feat-line:#D9B820; --feat-ink:#111111;
+  --user-bubble:#111111; --on-user:#FFFFFF; --warn:#8A3A0A; --note-bg:#FFF4E5; --note-line:#E8C9A0;
+  --s-michelin:#B3262E; --s-fooding:#13212B; --s-routard:#C79A00; --s-booking:#1F4FB0; --s-airbnb:#D2475A; --s-escale:#D9B820; --s-act:#3B8F5A;
+  --font-d:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-b:'Instrument Sans',system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111110; --surface:#1B1B19; --surface-2:#22221F; --ink:#F2F2EC; --muted:#B0B0A8; --faint:#7A7A73;
+  --line:#2E2E2A; --line-soft:#242421; --chip-line:#45453F;
+  --accent:#F5D547; --accent-ink:#F5D547; --accent-soft:#2F2A0E; --on-accent:#111111; --disabled:#3A3A35;
+  --hl:#F5D547; --feat-bg:#2F2A0E; --feat-line:#F5D547; --feat-ink:#F5D547;
+  --user-bubble:#2C2C28; --on-user:#F2F2EC; --warn:#F0A36B; --note-bg:#2E2414; --note-line:#5C4724;
+  --s-michelin:#E5636B; --s-fooding:#C9D3D1; --s-routard:#E7C04A; --s-booking:#7EA4F0; --s-airbnb:#F08494; --s-escale:#F5D547; --s-act:#9FD3A0;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111110; --surface:#1B1B19; --surface-2:#22221F; --ink:#F2F2EC; --muted:#B0B0A8; --faint:#7A7A73;
+  --line:#2E2E2A; --line-soft:#242421; --chip-line:#45453F;
+  --accent:#F5D547; --accent-ink:#F5D547; --accent-soft:#2F2A0E; --on-accent:#111111; --disabled:#3A3A35;
+  --hl:#F5D547; --feat-bg:#2F2A0E; --feat-line:#F5D547; --feat-ink:#F5D547;
+  --user-bubble:#2C2C28; --on-user:#F2F2EC; --warn:#F0A36B; --note-bg:#2E2414; --note-line:#5C4724;
+  --s-michelin:#E5636B; --s-fooding:#C9D3D1; --s-routard:#E7C04A; --s-booking:#7EA4F0; --s-airbnb:#F08494; --s-escale:#F5D547; --s-act:#9FD3A0;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent-ink)}
+h1,h2,h3{font-family:var(--font-d);font-weight:700;letter-spacing:-.015em;text-wrap:balance;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.container{max-width:1240px;margin:0 auto;padding-inline:max(16px,4vw)}
+
+/* En-tête */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .container{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;padding-block:12px}
+.brand{display:flex;align-items:center;gap:12px;background:none;border:none;padding:0;cursor:pointer;text-align:left}
+.mark{width:40px;height:40px;border-radius:12px;display:block;flex:none;box-shadow:0 0 0 1px var(--line)}
+.mark svg{display:block}
+.brand b{font-family:var(--font-d);font-size:21px;font-weight:700;letter-spacing:-.01em;display:block;line-height:1.1}
+.brand span{font-size:13px;color:var(--muted)}
+.nav{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nav a{color:var(--muted);text-decoration:none;font-size:14px;padding:10px 8px}
+.nav a:hover{color:var(--ink)}
+
+/* Boutons et puces */
+.btn{min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--chip-line);background:var(--surface);cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary[aria-disabled="true"]{background:var(--disabled);border-color:var(--disabled);color:var(--muted);cursor:default}
+.link{background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:44px;padding:0 2px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--chip-line);background:var(--surface);cursor:pointer;font-weight:500;font-size:14px}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip.ghost{color:var(--muted)}
+.field{display:flex;gap:8px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:4px 4px 4px 14px}
+.field input{flex:1;min-width:0;border:none;outline:none;background:transparent;min-height:44px;font-size:15px}
+
+/* Accueil */
+.hero{padding-block:56px 32px;display:flex;flex-direction:column;gap:28px}
+.hero h1{font-size:clamp(34px,5.4vw,60px);line-height:1.04;max-width:16ch}
+.hero p.lead{margin:0;font-size:18px;color:var(--muted);max-width:60ch}
+.hl{background:var(--hl);color:#111111;padding:0 .14em;border-radius:4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{text-align:left;min-height:156px;padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:border-color .15s,transform .15s}
+.tile:hover{border-color:var(--accent);transform:translateY(-2px)}
+.tile svg{color:var(--accent)}
+.tile b{font-family:var(--font-d);font-size:18px}
+.tile span{font-size:14px;color:var(--muted)}
+.tile.featured{background:var(--feat-bg);border-color:var(--feat-line);grid-column:span 2}
+.tile.featured b,.tile.featured span,.tile.featured svg{color:var(--feat-ink)}
+.tile.featured b{font-size:22px}
+.how{padding-block:40px;display:flex;flex-direction:column;gap:20px}
+.how h2{font-size:28px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;counter-increment:s}
+.steps li::before{content:counter(s);font-family:var(--font-d);font-weight:700;font-size:15px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--hl);color:#111111;margin-bottom:6px}
+.steps b{font-size:16px}
+.steps span{color:var(--muted);font-size:14px}
+.sources{padding-block:8px 56px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;color:var(--muted);font-size:14px}
+footer{border-top:1px solid var(--line);background:var(--surface)}
+footer .container{padding-block:20px;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:13px;color:var(--muted)}
+
+/* Assistant */
+.app{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding-block:28px 56px}
+.thread{flex:999 1 600px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:min(600px,92%);padding:12px 16px;border-radius:16px;white-space:pre-line}
+.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.user{align-self:flex-end;background:var(--user-bubble);color:var(--on-user);border-bottom-right-radius:4px}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:18px}
+.qcard h2{font-size:24px}
+.qcard .hint{font-size:14px;color:var(--muted)}
+.group{display:flex;flex-direction:column;gap:8px}
+.group > span{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.actions > div{display:flex;flex-wrap:wrap;gap:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.card-h h2{font-size:19px}
+.card-h span{font-size:13px;color:var(--muted)}
+ol.list{margin:0;padding:0;list-style:none}
+ol.list li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:12px 18px;border-top:1px solid var(--line-soft)}
+ol.list li:first-child{border-top:none}
+.rank{width:22px;font-family:var(--font-d);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.who{flex:1 1 220px;min-width:0;display:flex;flex-direction:column}
+.who a{font-weight:600;text-decoration:none;color:var(--ink)}
+.who a:hover{text-decoration:underline}
+.who small{font-size:13px;color:var(--muted)}
+.price{width:48px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;margin-left:auto}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;border:1px solid var(--line);font-size:12px;font-weight:600;white-space:nowrap}
+.tag i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.tag.dist{background:var(--hl);border-color:transparent;color:#111111}
+.acc{font-size:12px;color:var(--muted)}
+.acc.ok{color:var(--accent-ink)}
+.acc.no{color:var(--warn)}
+.days li{align-items:flex-start}
+.days .d{width:72px;font-family:var(--font-d);font-weight:700}
+.days .it{flex:1 1 260px;font-size:14px}
+.tips{margin:0;padding:14px 18px 14px 34px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.note{font-size:13px;color:var(--muted)}
+.loading{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 18px}
+.dots{display:flex;gap:5px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:b 1.2s infinite ease-in-out}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.dots i{animation:none;opacity:.7}.tile{transition:none}.tile:hover{transform:none}}
+.err{border:1px solid var(--warn);color:var(--warn);background:var(--surface);border-radius:12px;padding:12px 16px;font-size:14px}
+aside.brief{flex:1 1 290px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 88px)}
+aside h2{font-size:19px}
+.bar{height:6px;border-radius:3px;background:var(--line-soft);overflow:hidden}
+.bar div{height:100%;background:var(--hl);transition:width .3s}
+dl{margin:0;display:flex;flex-direction:column;gap:2px}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:14px;align-items:center;min-height:36px}
+.row dt{color:var(--muted);flex:none}
+.row dd{margin:0;text-align:right;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.row dd.empty{font-weight:400;color:var(--faint)}
+.row button{border:none;background:none;padding:6px 0;cursor:pointer;font-weight:600;text-align:right;text-decoration:underline dotted;text-underline-offset:3px}
+.split{display:flex;height:12px;border-radius:6px;overflow:hidden}
+.legend{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.sep{border-top:1px solid var(--line-soft);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+@media (max-width:700px){aside.brief{position:static}.hero{padding-block:32px 20px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="container">
+    <button class="brand" type="button" id="home" aria-label="Escale, retour à l'accueil">
+      <span class="mark"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#111111"/><path d="M12 19.5L18.5 13H36v22H18.5L12 28.5z" fill="#F5D547"/><circle cx="18.5" cy="24" r="2.4" fill="#111111"/><path d="M24 20h8M24 24h8M24 28h5" stroke="#111111" stroke-width="2" stroke-linecap="round"/></svg></span>
+      <span><b>Escale</b><span>Votre assistant voyage privé</span></span>
+    </button>
+    <nav class="nav" id="nav" aria-label="Navigation"></nav>
+  </div>
+</header>
+
+<div id="view"></div>
+
+<footer>
+  <div class="container">
+    <span>© 2026 Escale · [MENTIONS LÉGALES] · [CONTACT]</span>
+    <span>Adresses vérifiées en ligne au moment de la recherche. Confirmez prix et disponibilités avant de réserver.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+/* ---------- Questions ---------- */
+const G = (title, list) => ({title, list});
+const LIEU = {id:'lieu',label:'Destination',ask:'Dans quelle ville ou région ?',hint:'Choisissez une suggestion ou écrivez la destination de votre choix.',otherPh:'Écrire une ville, une région, un pays…',
+  groups:[G('',['Paris','Lisbonne','Rome','Barcelone','Londres','New York','Tokyo','Marrakech','Bordeaux','Lyon','Marseille','Porto'])]};
+const QUAND = {id:'quand',label:'Quand',ask:'Pour quand ?',otherPh:'Une date précise…',groups:[G('',['Ce midi','Ce soir','Demain','Ce week-end','Dans la semaine'])]};
+const PAX = {id:'pax',label:'Voyageurs',ask:'Vous partez avec qui ?',otherPh:'Autre, précisez…',
+  groups:[G('',['Seul(e)','En couple','En famille avec enfants','En famille avec un bébé','Entre amis','En groupe (6 et plus)',"Voyage d'affaires"])]};
+const ACCESS = {id:'access',label:'Accessibilité',ask:"Avez-vous des besoins d'accessibilité ?",hint:'Plusieurs choix possibles. « Peu importe » si aucun besoin.',multi:true,otherPh:'Autre besoin…',
+  groups:[G('Mobilité',['Fauteuil roulant','Mobilité réduite, peu de marche','Accès sans marches','Avec poussette']),
+          G('Sens et autres',['Déficience visuelle','Déficience auditive',"Chien d'assistance",'Toilettes adaptées'])]};
+const NOTES = {id:'notes',label:'Précisions',ask:'Une précision à ajouter ?',hint:'Allergies, occasion spéciale, quartier précis… Écrivez-la librement, ou passez.',multi:true,otherPh:'Écrivez votre précision…',
+  groups:[G('Exemples',['Allergie alimentaire','Anniversaire','Demande en mariage','Avec un animal','Arrivée tardive','Besoin de calme','Wifi rapide pour télétravailler'])]};
+const CUISINE = {id:'cuisine',label:'Cuisine',ask:'Quelles cuisines vous font envie ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Une autre cuisine…',
+  groups:[G('Cuisines du monde',['Locale, du pays','Française','Italienne','Espagnole','Portugaise','Grecque','Libanaise','Marocaine','Turque','Indienne','Thaïlandaise','Vietnamienne','Chinoise','Japonaise','Coréenne','Mexicaine','Péruvienne','Brésilienne','Africaine','Américaine','Fusion']),
+          G('Spécialités',['Poissons et fruits de mer','Viandes et grillades','Pizza','Burgers','Tapas, petites assiettes','Sushi','Ramen','Crêpes','Brunch','Pâtisserie, sucré'])]};
+const STYLE = {id:'style',label:'Style',ask:"Quel genre d'établissement ?",hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre style…',
+  groups:[G('',['Gastronomique, étoilé','Bistronomie','Brasserie','Bistrot, taverne',"Table d'hôtes",'Halle gourmande','Street food',"Restaurant d'hôtel",'Salon de thé','Restaurant avec musique live'])]};
+const AMBIANCE_R = {id:'ambiance',label:'Ambiance',ask:'Quelle ambiance et quel cadre ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre envie…',
+  groups:[G('Ambiance',['Romantique','Entre amis','En famille',"Repas d'affaires",'Festive','Calme','Branchée','Authentique, local','Insolite']),
+          G('Cadre',['Terrasse','Avec une vue','Rooftop',"Au bord de l'eau",'Jardin','Cave voûtée','Cosy'])]};
+const REGIME = {id:'regime',label:'Régime',ask:'Un régime alimentaire à respecter ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre régime ou allergie…',
+  groups:[G('',['Végétarien','Vegan','Sans gluten','Sans lactose','Halal','Casher','Pescetarien'])]};
+const TYPE_LOG = {id:'type',label:"Type d'hébergement",ask:"Quel type d'hébergement ?",hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre type…',
+  groups:[G('Hôtels',['Hôtel 2 ou 3 étoiles','Hôtel 4 étoiles','Hôtel 5 étoiles','Palace','Hôtel boutique','Hôtel design','Resort, club']),
+          G('Locations',['Appartement','Maison, villa','Appart-hôtel','Loft','Gîte']),
+          G("Chez l'habitant",["Chambre d'hôtes","Maison d'hôtes, riad",'Auberge de jeunesse']),
+          G('Insolite et nature',['Écolodge','Glamping','Cabane','Bateau, péniche','Château, demeure'])]};
+const ENVIES = {id:'envies',label:'Envies',ask:"Qu'est-ce qui vous fait envie ?",hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre envie…',
+  groups:[G('Culture',['Musées','Monuments','Visites guidées','Architecture','Street art','Spectacles, concerts','Quartiers à flâner']),
+          G('Gastronomie',['Marchés','Cours de cuisine','Dégustation de vin','Food tour']),
+          G('Nature et sport',['Randonnée','Plages','Parcs et jardins','Vélo','Sports nautiques',"Excursion d'une journée"]),
+          G('Détente',['Spa, bien-être','Balade en bateau','Coucher de soleil','Shopping']),
+          G('Avec des enfants',['Zoo, aquarium',"Parc d'attractions",'Ateliers pour enfants'])]};
+
+const FLOWS = {
+  restaurant:{label:'Trouver un restaurant',qs:[LIEU,QUAND,
+    {id:'couverts',label:'Personnes',ask:'Combien de personnes ?',otherPh:'Nombre exact…',groups:[G('',['1','2','3 à 4','5 à 8','Groupe de 9 et plus'])]},
+    {id:'budget',label:'Budget / pers.',ask:'Quel budget par personne, hors boissons ?',otherPh:'Un montant précis…',groups:[G('',['Moins de 15 €','15 à 30 €','30 à 60 €','60 à 120 €','120 € et plus','Sans limite'])]},
+    CUISINE,STYLE,AMBIANCE_R,REGIME,ACCESS,NOTES]},
+  bar:{label:'Boire un verre',qs:[LIEU,QUAND,
+    {id:'moment',label:'Moment',ask:'À quel moment ?',otherPh:'Autre moment…',groups:[G('',['Fin d’après-midi','Apéritif','Après le dîner','Tard dans la nuit','Toute la soirée'])]},
+    {id:'type',label:'Type de bar',ask:"Quel genre d'endroit ?",hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre type de bar…',
+      groups:[G('Vin et bulles',['Bar à vin','Bar à vin nature','Cave à manger','Bar à champagne']),
+              G('Cocktails et spiritueux',['Bar à cocktails','Speakeasy',"Bar d'hôtel, palace",'Bar à whisky','Bar à rhum','Bar à mezcal, tequila','Bar à saké']),
+              G('Bière et convivialité',['Pub','Brasserie artisanale','Bar à bières','Bar de quartier','Bar à tapas','Comptoir traditionnel']),
+              G('Musique et fête',['Bar à jazz','Concerts live','Bar dansant','Club, boîte de nuit','Karaoké','DJ set']),
+              G('Avec vue',['Rooftop','Bar de plage',"Au bord de l'eau"]),
+              G('Autres',['Bar sans alcool, mocktails','Bar à jeux','Bar LGBT+ friendly','Café-bar'])]},
+    {id:'ambiance',label:'Ambiance',ask:'Quelle ambiance ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre envie…',
+      groups:[G('Ambiance',['Calme, pour discuter','Animée','Chic','Décontractée','Festive','Intimiste','Branchée']),
+              G('Sur place',['Planches à partager','Tapas','Terrasse','Vue','Musique live','Happy hour'])]},
+    {id:'budget',label:'Budget / verre',ask:'Quel budget par verre ?',otherPh:'Un montant précis…',groups:[G('',['Moins de 6 €','6 à 10 €','10 à 15 €','15 € et plus'])]},
+    ACCESS,NOTES]},
+  logement:{label:'Trouver un hébergement',qs:[LIEU,
+    {id:'dates',label:'Durée',ask:'Pour combien de temps ?',otherPh:'Des dates précises…',groups:[G('',['1 nuit','Un week-end','3 à 4 nuits','Une semaine','Deux semaines','Plus longtemps'])]},
+    PAX,
+    {id:'budget',label:'Budget / nuit',ask:'Quel budget par nuit ?',otherPh:'Un montant précis…',groups:[G('',['Moins de 60 €','60 à 100 €','100 à 200 €','200 à 400 €','400 à 800 €','Plus de 800 €'])]},
+    TYPE_LOG,
+    {id:'plateforme',label:'Plateforme',ask:'Une plateforme de réservation préférée ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre plateforme…',
+      groups:[G('',['Booking','Airbnb','Abritel, Vrbo','Hotels.com','Expedia','Réservation en direct'])]},
+    {id:'equip',label:'Équipements',ask:'Quels équipements comptent pour vous ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre équipement…',
+      groups:[G('Confort',['Petit-déjeuner inclus','Climatisation','Cuisine équipée','Lave-linge','Terrasse, balcon','Vue','Ascenseur']),
+              G('Détente',['Piscine','Spa, hammam','Salle de sport','Plage privée','Jardin']),
+              G('Pratique',['Parking','Navette aéroport','Réception 24 h/24','Wifi rapide','Espace de travail','Animaux acceptés','Lit bébé']),
+              G('Réservation',['Annulation gratuite','Paiement sur place','Note de 8/10 et plus','Note de 9/10 et plus'])]},
+    {id:'quartier',label:'Quartier',ask:'Quel genre de quartier ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Un quartier précis…',
+      groups:[G('',['Centre historique','Calme, résidentiel','Animé, vie nocturne','Branché, créatif','Bord de mer','Nature, campagne','Proche gare ou aéroport','Bien desservi en transports'])]},
+    ACCESS,NOTES]},
+  activites:{label:'Trouver des activités',qs:[LIEU,
+    {id:'quand',label:'Quand',ask:'Pour quand ?',otherPh:'Une date précise…',groups:[G('',["Aujourd'hui",'Demain','Ce week-end','Pendant tout mon séjour'])]},
+    PAX,ENVIES,
+    {id:'duree',label:'Durée',ask:'Combien de temps par activité ?',otherPh:'Autre durée…',groups:[G('',['1 à 2 heures','Une demi-journée','Une journée entière','Peu importe'])]},
+    {id:'budget',label:'Budget',ask:'Quel budget par personne ?',otherPh:'Un montant précis…',groups:[G('',['Gratuit','Moins de 30 €','30 à 80 €','Sans limite'])]},
+    ACCESS,NOTES]},
+  voyage:{label:'Organiser tout mon voyage',qs:[LIEU,
+    {id:'dates',label:'Durée',ask:'Combien de temps dure votre séjour ?',otherPh:'Des dates précises…',groups:[G('',['Un week-end','3 à 4 jours','Une semaine','Deux semaines'])]},
+    PAX,
+    {id:'budget',label:'Budget',ask:'Quel niveau de budget global ?',otherPh:'Un montant, ex. 1 500 € à deux…',groups:[G('',['Économique','Moyen','Confort','Luxe'])]},
+    {id:'priorite',label:'Priorité',ask:'Où préférez-vous mettre votre budget ?',otherPh:'Autre priorité…',groups:[G('',['Dans un bel hébergement','Équilibré','Dans les bonnes tables et les bars'])]},
+    TYPE_LOG,
+    {id:'table',label:'Côté table',ask:'Côté restaurants et bars, vous aimez…',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre envie…',
+      groups:[G('',['Tables étoilées','Bistronomie','Cuisine locale','Poissons et fruits de mer','Street food','Brunchs','Végétarien','Bars à vin','Cocktails','Rooftops','Vie nocturne'])]},
+    ENVIES,
+    {id:'rythme',label:'Rythme',ask:'Et quel rythme ?',otherPh:'Autre…',groups:[G('',['Tranquille','Équilibré','Intense'])]},
+    {id:'transport',label:'Sur place',ask:'Comment vous déplacez-vous sur place ?',hint:'Plusieurs choix possibles.',multi:true,otherPh:'Autre…',
+      groups:[G('',['À pied','Transports en commun','Voiture de location','Vélo, trottinette','Taxi, VTC'])]},
+    ACCESS,NOTES]}
+};
+
+const TILES = [
+  {k:'voyage',t:'Voyage complet',s:'Hébergement, tables, bars, activités et itinéraire',i:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/>',featured:true},
+  {k:'restaurant',t:'Restaurant',s:'Du bistrot de quartier à la table étoilée',i:'<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17.5 3C15.5 3 14.5 5.5 14.5 8.5s1 4 3 4V21"/>'},
+  {k:'bar',t:'Boire un verre',s:'Bar à vin, cocktails, rooftop, club',i:'<path d="M7.5 3h9l-1 6.5a3.5 3.5 0 0 1-7 0L7.5 3zM12 13v8M8 21h8M8 7h8"/>'},
+  {k:'logement',t:'Hébergement',s:"Hôtel, appartement, chambre d'hôtes, insolite",i:'<path d="M3 19V6M3 14h18v5M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/>'},
+  {k:'activites',t:'Activités',s:'Musées, nature, visites, sorties en famille',i:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>'},
+];
+
+const SOURCES = {'Guide Michelin':'--s-michelin','Le Fooding':'--s-fooding','Le Routard':'--s-routard','Booking':'--s-booking','Airbnb':'--s-airbnb'};
+const SPLITS = {'Dans un bel hébergement':[55,25,20],'Équilibré':[40,35,25],'Dans les bonnes tables et les bars':[30,50,20]};
+
+/* ---------- État ---------- */
+const fresh = () => ({mode:null, step:0, answers:{}, draft:[], result:null, loading:false, error:null, lastAsk:null, pendingRefine:null});
+let S = fresh();
+let ctl = null;
+let CONFIG = {requiresCode:false, bookingAid:''};
+
+const view = document.getElementById('view');
+const nav = document.getElementById('nav');
+
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  for (const k in (attrs||{})){
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'html') el.innerHTML = v; /* uniquement pour nos icônes SVG statiques */
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return el;
+}
+const svg = (paths, size) => h('span',{'aria-hidden':'true',html:'<svg width="'+(size||28)+'" height="'+(size||28)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+paths+'</svg>'});
+
+function flow(){ return S.mode ? FLOWS[S.mode] : null; }
+function show(q){
+  const a = S.answers[q.id];
+  if (a === undefined) return null;
+  if (!a.length) return 'Peu importe';
+  return a.length > 3 ? a.slice(0,3).join(', ') + ' +' + (a.length-3) : a.join(', ');
+}
+function start(k){ if (ctl) ctl.abort(); S = fresh(); S.mode = k; render(); window.scrollTo({top:0}); }
+function goHome(){ if (ctl) ctl.abort(); S = fresh(); render(); window.scrollTo({top:0}); }
+function nextUnanswered(){
+  const qs = flow().qs;
+  for (let i = 0; i < qs.length; i++) if (S.answers[qs[i].id] === undefined) return i;
+  return qs.length;
+}
+function commit(q, list){
+  S.answers[q.id] = list;
+  S.draft = [];
+  S.step = nextUnanswered();
+  S.result = null; S.error = null;
+  if (S.step >= flow().qs.length) generate(); else { render(); focusCard(); }
+}
+function focusCard(){ const c = document.querySelector('.qcard h2'); if (c){ c.setAttribute('tabindex','-1'); c.focus({preventScroll:true}); c.scrollIntoView({block:'nearest'}); } }
+
+/* ---------- Serveur ---------- */
+async function loadConfig(){ try { const r = await fetch('/api/config'); if (r.ok) CONFIG = await r.json(); } catch(e){} }
+function getCode(){ if (!CONFIG.requiresCode) return null; try { return localStorage.getItem('escale-code'); } catch(e){ return null; } }
+function setCode(c){ try { localStorage.setItem('escale-code', c); } catch(e){} }
+
+async function generate(refineText){
+  if (CONFIG.requiresCode && !getCode()){ S.error = 'need_code'; S.pendingRefine = refineText || null; render(); return; }
+  if (ctl) ctl.abort();
+  ctl = new AbortController();
+  S.lastAsk = refineText || null;
+  S.loading = true; S.error = null; render();
+  const body = {
+    mode: S.mode,
+    answers: flow().qs.map(q => ({label: q.label, value: show(q) === null ? '' : (S.answers[q.id].length ? S.answers[q.id].join(', ') : 'Peu importe')})),
+    refine: refineText || null,
+    previous: refineText ? S.result : null,
+    access_code: getCode()
+  };
+  try {
+    const r = await fetch('/api/recommend', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body), signal: ctl.signal});
+    if (!r.ok){
+      let code = 'upstream_error';
+      try { const j = await r.json(); if (typeof j.detail === 'string') code = j.detail; } catch(e){}
+      if (code === 'bad_code'){ setCode(''); code = 'need_code'; }
+      throw {code};
+    }
+    const data = await r.json();
+    if (!data || !Array.isArray(data.sections)) throw {code:'invalid_json'};
+    S.result = data;
+  } catch(e){
+    if (e && e.name !== 'AbortError') S.error = (e && e.code) || 'upstream_error';
+  }
+  S.loading = false; render();
+}
+
+const ERR = {
+  not_configured:"Le site n’est pas encore relié à Claude : la clé API n’est pas configurée sur le serveur.",
+  need_code:"Ce site est réservé pour le moment. Entrez le code d’accès que l’on vous a donné.",
+  rate_limited:"Trop de recherches en peu de temps. Patientez un peu, puis relancez.",
+  invalid_json:"La réponse n’a pas pu être lue. Relancez la recherche.",
+  refused:"Cette demande n’a pas pu être traitée. Reformulez vos précisions et relancez.",
+  upstream_error:"La recherche n’a pas abouti. Vérifiez votre connexion, puis relancez."
+};
+
+function linkFor(it){
+  const city = (S.answers.lieu || [])[0] || '';
+  const q = encodeURIComponent((it.name || '') + ' ' + city);
+  const src = it.sources || [];
+  if (it.category === 'logement' && src.includes('Airbnb')) return 'https://www.airbnb.fr/s/' + encodeURIComponent(((it.area||'') + ' ' + city).trim()) + '/homes';
+  if (it.category === 'logement') return 'https://www.booking.com/searchresults.fr.html?ss=' + q + (CONFIG.bookingAid ? '&aid=' + encodeURIComponent(CONFIG.bookingAid) : '');
+  if (/^https:\/\//.test(String(it.url || ''))) return it.url;
+  return 'https://www.google.com/maps/search/?api=1&query=' + q;
+}
+
+/* ---------- Affichage ---------- */
+function render(){
+  nav.replaceChildren(...[
+    !S.mode ? h('a',{href:'#comment'},'Comment ça marche') : null,
+    S.mode ? h('button',{class:'btn',type:'button',onclick:goHome},'Nouvelle demande')
+           : h('button',{class:'btn primary',type:'button',onclick:()=>start('voyage')},'Organiser un voyage')].filter(Boolean));
+  view.replaceChildren(S.mode ? renderApp() : renderHome());
+}
+
+function renderHome(){
+  return h('main',{class:'container'},
+    h('section',{class:'hero','aria-labelledby':'hero-t'},
+      h('div',{style:'display:flex;flex-direction:column;gap:14px'},
+        h('span',{class:'eyebrow',text:'Assistant voyage privé'}),
+        h('h1',{id:'hero-t'},'Les bonnes adresses, ', h('mark',{class:'hl',text:'où que vous alliez.'})),
+        h('p',{class:'lead',text:'Restaurant, bar, hébergement, activités ou voyage complet : Escale vous pose les bonnes questions, puis vous propose une sélection classée et vérifiée en direct, dans n’importe quelle ville.'})),
+      h('div',{class:'tiles'}, TILES.map(t => h('button',{class:'tile' + (t.featured ? ' featured' : ''),type:'button',onclick:()=>start(t.k)},
+        svg(t.i), h('b',{text:t.t}), h('span',{text:t.s}))))),
+    h('section',{class:'how',id:'comment','aria-labelledby':'how-t'},
+      h('h2',{id:'how-t',text:'Comment ça marche'}),
+      h('ol',{class:'steps'},
+        h('li',null,h('b',{text:'Vous choisissez votre demande'}),h('span',{text:'Un restaurant ce soir, un bar à vin, un hôtel pour le week-end ou tout un voyage.'})),
+        h('li',null,h('b',{text:'Escale affine avec vous'}),h('span',{text:'Budget, goûts, ambiance, régime, accessibilité : quelques questions, avec vos précisions libres.'})),
+        h('li',null,h('b',{text:'Vous recevez votre sélection'}),h('span',{text:'Des listes classées, vérifiées sur les guides et les plateformes au moment de la recherche, avec un lien pour réserver.'})))),
+    h('section',{class:'sources','aria-label':'Sources consultées'},
+      h('span',{text:'Sources consultées :'}),
+      h('div',{class:'tags'}, Object.keys(SOURCES).map(x => h('span',{class:'tag'}, h('i',{style:'background:var(' + SOURCES[x] + ')'}), x)))));
+}
+
+function renderApp(){
+  const f = flow();
+  const thread = h('main',{class:'thread','aria-live':'polite'});
+  thread.append(h('div',{class:'msg user'}, f.label));
+  f.qs.forEach((q,i) => {
+    if (i >= S.step && S.step < f.qs.length) return;
+    if (S.answers[q.id] === undefined) return;
+    thread.append(h('div',{class:'msg bot'}, q.ask), h('div',{class:'msg user'}, show(q)));
+  });
+  if (S.step < f.qs.length) thread.append(renderQuestion(f.qs[S.step], f));
+  else renderOutcome(thread);
+  return h('div',{class:'container app'}, thread, renderBrief(f));
+}
+
+function renderQuestion(q, f){
+  const card = h('section',{class:'qcard','aria-labelledby':'q-t'});
+  card.append(h('div',{style:'display:flex;flex-direction:column;gap:4px'},
+    h('span',{class:'eyebrow',text:'Question ' + (S.step+1) + ' sur ' + f.qs.length + ' · ' + q.label}),
+    h('h2',{id:'q-t',text:q.ask}),
+    h('span',{class:'hint',text:q.hint || 'Choisissez une réponse, ou écrivez la vôtre.'})));
+  q.groups.forEach(g => {
+    card.append(h('div',{class:'group',role:'group','aria-label':g.title || q.label},
+      g.title ? h('span',{text:g.title}) : null,
+      h('div',{class:'chips'}, g.list.map(t => {
+        const on = q.multi && S.draft.includes(t);
+        return h('button',{class:'chip',type:'button','aria-pressed':q.multi ? String(on) : null,
+          onclick:()=>{
+            if (!q.multi){ commit(q,[t]); return; }
+            S.draft = on ? S.draft.filter(x => x !== t) : S.draft.concat([t]);
+            render();
+            const again = [...document.querySelectorAll('.qcard .chip')].find(b => b.textContent.replace(/^✓ /,'') === t);
+            if (again) again.focus();
+          }}, on ? '✓ ' + t : t);
+      }))));
+  });
+  const inp = h('input',{id:'f-other',type:'text',placeholder:q.otherPh || 'Autre, précisez…',autocomplete:'off'});
+  const finish = () => {
+    const extra = inp.value.trim();
+    if (q.multi){
+      const list = S.draft.concat(extra ? [extra] : []);
+      if (list.length) commit(q, list); else inp.focus();
+    } else if (extra) commit(q,[extra]); else inp.focus();
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); finish(); } });
+  card.append(h('label',{class:'sr',for:'f-other'}, q.multi ? 'Autre réponse' : q.ask), h('div',{class:'field'}, inp,
+    !q.multi ? h('button',{class:'btn primary',type:'button',onclick:finish},'Valider') : null));
+  const n = S.draft.length;
+  card.append(h('div',{class:'actions'},
+    h('button',{class:'link',type:'button',onclick:()=>{
+      if (S.step === 0){ goHome(); return; }
+      S.step -= 1; S.draft = []; render(); focusCard();
+    }}, S.step === 0 ? 'Changer de type de demande' : 'Revenir à la question précédente'),
+    q.multi ? h('div',null,
+      h('button',{class:'btn',type:'button',onclick:()=>commit(q,[])},'Peu importe'),
+      h('button',{class:'btn primary',type:'button','aria-disabled':n || inp.value ? 'false' : 'true',onclick:finish}, n ? 'Valider (' + n + ')' : 'Valider')) : null));
+  return card;
+}
+
+function renderOutcome(thread){
+  if (S.lastAsk) thread.append(h('div',{class:'msg user'}, S.lastAsk));
+  if (S.loading){
+    thread.append(h('div',{class:'card loading',role:'status'}, h('div',{class:'dots','aria-hidden':'true'},h('i'),h('i'),h('i')),
+      h('div',{style:'flex:1;min-width:0'}, h('div',{text:'Escale vérifie les adresses en direct…'}), h('div',{class:'note',text:'Recherche sur les guides et les plateformes : comptez 1 à 2 minutes.'})),
+      h('button',{class:'btn',type:'button',onclick:()=>{ if (ctl) ctl.abort(); }}, 'Arrêter')));
+    return;
+  }
+  if (S.error){
+    thread.append(h('div',{class:'err',role:'alert'}, ERR[S.error] || ERR.upstream_error));
+    if (S.error === 'need_code'){
+      const ci = h('input',{id:'f-code',type:'password',placeholder:'Code d’accès',autocomplete:'off'});
+      const ok = () => { const v = ci.value.trim(); if (v){ setCode(v); generate(S.pendingRefine || undefined); } };
+      ci.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); ok(); } });
+      thread.append(h('label',{class:'sr',for:'f-code'},'Code d’accès'), h('div',{class:'field'}, ci, h('button',{class:'btn primary',type:'button',onclick:ok},'Valider')));
+    } else thread.append(h('button',{class:'btn primary',type:'button',style:'align-self:flex-start',onclick:()=>generate(S.lastAsk || undefined)}, 'Relancer la recherche'));
+  }
+  if (S.result) renderResult(thread, S.result);
+  else if (!S.error) thread.append(h('button',{class:'btn primary',type:'button',style:'align-self:flex-start',onclick:()=>generate()}, 'Lancer la recherche'));
+}
+
+function priceOf(p){ const n = Math.max(1, Math.min(4, String(p||'').replace(/[^€]/g,'').length || 2)); return '€€€€'.slice(0,n); }
+
+function renderResult(thread, r){
+  if (r.summary) thread.append(h('div',{class:'msg bot'}, String(r.summary)));
+  const needsAccess = (S.answers.access || []).length > 0;
+  (r.sections||[]).forEach(sec => {
+    const items = Array.isArray(sec.items) ? sec.items : [];
+    if (!items.length) return;
+    thread.append(h('section',{class:'card'},
+      h('div',{class:'card-h'}, h('h2',{text:String(sec.title||'')}), h('span',{text: items.length + (items.length > 1 ? ' propositions' : ' proposition')})),
+      h('ol',{class:'list'}, items.map((it,i) => {
+        const srcs = (Array.isArray(it.sources) ? it.sources : []).filter(x => SOURCES[x]);
+        const acc = String(it.access||'');
+        return h('li',null,
+          h('span',{class:'rank',text:String(i+1)}),
+          h('div',{class:'who'},
+            h('a',{href:linkFor(it),target:'_blank',rel:'noopener'}, String(it.name||'')),
+            h('small',{text:[it.area,it.kind].filter(Boolean).join(' · ')})),
+          needsAccess && acc ? h('span',{class:'acc ' + (acc==='oui'?'ok':acc==='non vérifié'?'no':''), text:'Accessible : ' + acc}) : null,
+          h('div',{class:'tags'},
+            it.distinction ? h('span',{class:'tag dist',text:String(it.distinction)}) : null,
+            srcs.map(x => h('span',{class:'tag'}, h('i',{style:'background:var(' + SOURCES[x] + ')'}), x)),
+            !srcs.length && !it.distinction ? h('span',{class:'tag'}, h('i',{style:'background:var(--s-escale)'}), 'Sélection Escale') : null),
+          h('span',{class:'price','aria-label':'Prix : ' + priceOf(it.price).length + ' sur 4',text:priceOf(it.price)}));
+      }))));
+  });
+  const days = Array.isArray(r.itinerary) ? r.itinerary : [];
+  if (days.length) thread.append(h('section',{class:'card'},
+    h('div',{class:'card-h'}, h('h2',{text:'Itinéraire jour par jour'})),
+    h('ol',{class:'list days'}, days.map(d => h('li',null, h('span',{class:'d',text:String(d.day||'')}), h('span',{class:'it',text:(Array.isArray(d.items)?d.items:[]).join(' · ')}))))));
+  const tips = Array.isArray(r.tips) ? r.tips : [];
+  if (tips.length) thread.append(h('section',{class:'card'},
+    h('div',{class:'card-h'}, h('h2',{text:'Conseils pratiques'})),
+    h('ul',{class:'tips'}, tips.map(t => h('li',{text:String(t)})))));
+
+  const box = h('div',{style:'display:flex;flex-direction:column;gap:10px'});
+  box.append(h('div',{class:'chips'}, ['Moins cher','Plus central','D’autres adresses','Plus d’options végétariennes','Plus accessible'].map(t =>
+    h('button',{class:'chip ghost',type:'button',onclick:()=>generate(t)}, t))));
+  const inp = h('input',{id:'f-refine',type:'text',placeholder:'Affinez : « plus proche de la plage », « avec terrasse »…',autocomplete:'off'});
+  const go = () => { const v = inp.value.trim(); if (v) generate(v); };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); go(); } });
+  box.append(h('label',{class:'sr',for:'f-refine'},'Affiner la proposition'), h('div',{class:'field'}, inp, h('button',{class:'btn primary',type:'button',onclick:go},'Envoyer')));
+  box.append(h('button',{class:'link',type:'button',onclick:()=>{ S.step = 0; S.result = null; S.error = null; render(); focusCard(); }},'Modifier mes critères depuis le début'));
+  thread.append(box);
+}
+
+function renderBrief(f){
+  const aside = h('aside',{class:'brief','aria-label':'Votre demande'});
+  const total = f.qs.length;
+  const answered = f.qs.filter(q => S.answers[q.id] !== undefined).length;
+  aside.append(h('div',null, h('h2',{text:'Votre demande'}),
+    h('div',{class:'note',text: S.step >= total ? 'Demande complète' : 'Question ' + (S.step+1) + ' sur ' + total})));
+  aside.append(h('div',{class:'bar'}, h('div',{style:'width:' + Math.round(answered/total*100) + '%'})));
+  aside.append(h('dl',null, h('div',{class:'row'}, h('dt',{text:'Demande'}), h('dd',{text:f.label})),
+    f.qs.map((q,i) => {
+      const v = show(q);
+      const dd = v === null ? h('dd',{class:'empty',text:'—'})
+        : h('dd',null, h('button',{type:'button','aria-label':'Modifier : ' + q.label,onclick:()=>{ if (ctl) ctl.abort(); S.step = i; S.draft = (S.answers[q.id]||[]).slice(); S.result = null; S.error = null; S.loading = false; delete S.answers[q.id]; render(); focusCard(); }}, v));
+      return h('div',{class:'row'}, h('dt',{text:q.label}), dd);
+    })));
+  const sp = S.mode === 'voyage' && SPLITS[(S.answers.priorite || [])[0]];
+  if (sp){
+    const cols = ['var(--s-booking)','var(--accent)','var(--s-act)'];
+    const labels = ['Hébergement','Restaurants et bars','Activités'];
+    aside.append(h('div',{class:'sep'}, h('strong',{style:'font-size:13px',text:'Répartition de votre budget'}),
+      h('div',{class:'split'}, sp.map((p,i)=>h('div',{style:'width:'+p+'%;background:'+cols[i]}))),
+      labels.map((l,i)=>h('div',{class:'legend'}, h('span',{style:'display:flex;align-items:center;gap:8px'}, h('i',{style:'width:10px;height:10px;border-radius:3px;background:'+cols[i]}), l), h('strong',{text:sp[i]+' %'})))));
+  }
+  aside.append(h('div',{class:'sep'}, h('strong',{style:'font-size:13px',text:'Sources consultées'}),
+    h('div',{class:'tags'}, Object.keys(SOURCES).map(x => h('span',{class:'tag'}, h('i',{style:'background:var(' + SOURCES[x] + ')'}), x)))));
+  return aside;
+}
+
+document.getElementById('home').addEventListener('click', goHome);
+render();
+loadConfig();
+})();
+</script>
+</body>
+</html>
