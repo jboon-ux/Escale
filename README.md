@@ -1,73 +1,50 @@
-# Escale — assistant voyage privé
+# Escale - assistant voyage
 
-Site web où le client décrit sa demande (restaurant, bar, logement ou voyage complet),
-répond à quelques questions, puis reçoit des listes d'adresses vérifiées en direct
-sur le web : Guide Michelin, Le Fooding, Le Routard, Booking, Airbnb et sites officiels.
+Application FastAPI en français : restaurants, bars, hébergements, activités et idées de voyage.
 
-## Ce qu'il y a dans ce dossier
+## Architecture gratuite
 
-| Fichier | Rôle |
-|---|---|
-| `app.py` | Le serveur : reçoit la demande, interroge Claude avec la recherche web, renvoie les listes |
-| `static/index.html` | L'interface que voient les clients |
-| `requirements.txt` | Les bibliothèques Python nécessaires |
-| `.env.example` | Le modèle des réglages (clé API, code d'accès, identifiant Booking) |
-| `render.yaml` | La configuration pour mettre le site en ligne sur Render |
+- **Tavily Researcher** : recherche web, 1 000 crédits gratuits par mois. Une demande simple utilise une recherche basic (1 crédit), un voyage complet quatre (4 crédits). Les affinages relancent les recherches.
+- **Groq Free** : synthèse avec `openai/gpt-oss-120b`, sortie JSON. Les limites du compte et du modèle s'appliquent.
+- **Render Free** : serveur Python. Mise en veille après 15 minutes sans visite et réveil parfois lent.
 
-## 1. Obtenir une clé API Claude
+Aucune carte ni facturation n'est nécessaire pour cette configuration. Ne pas activer pay-as-you-go, auto-upgrade ou un plan payant. Les API arrêtent les requêtes aux limites gratuites. Le code ne propose aucun fallback payant, ni relance automatique cachée.
 
-1. Créez un compte sur https://console.anthropic.com/
-2. Ajoutez un moyen de paiement (l'API est facturée à l'usage : chaque recherche consomme des tokens et des recherches web).
-3. Dans **API Keys**, créez une clé et copiez-la.
+Les offres et quotas peuvent changer. Cette version n'offre aucune garantie de service. Les sources web ne garantissent ni horaires, ni prix, ni disponibilités : vérifier auprès des établissements avant de réserver. Les indications d'accessibilité restent non vérifiées. Les liens renvoyés par l'IA sont conservés uniquement s'ils figurent dans les résultats Tavily. Les listes peuvent être plus courtes que demandé si les sources manquent.
 
-Conseil : dans la console, fixez une **limite de dépenses mensuelle** pour éviter les surprises.
+## Confidentialité
 
-## 2. Tester sur votre ordinateur
+Les critères saisis sont transmis à Tavily puis Groq pour produire la sélection. Ne pas saisir d'informations sensibles, confidentielles ou personnelles. Les clés API restent uniquement dans les variables serveur, jamais dans GitHub ou le navigateur. Aucun historique de recherche n'est stocké côté serveur par cette app. Les fournisseurs appliquent leurs propres conditions et règles de conservation.
 
-Il faut Python 3.10 ou plus récent (https://www.python.org/downloads/).
+## Lancer en local
 
-```bash
-cd escale-app
-cp .env.example .env
-```
+Python 3.10 ou plus récent :
 
-Ouvrez `.env` et collez votre clé après `ANTHROPIC_API_KEY=`. Puis :
-
-```bash
-python3 -m venv .venv
+```sh
+python -m venv .venv
 .venv/bin/pip install -r requirements.txt
+cp .env.example .env
+# Remplir GROQ_API_KEY et TAVILY_API_KEY dans .env, sans le publier.
 .venv/bin/uvicorn app:app --reload
 ```
 
-Ouvrez http://localhost:8000 dans votre navigateur.
+Ouvrir http://localhost:8000.
 
-## 3. Mettre le site en ligne (Render)
+## Déployer sur Render
 
-1. Créez un compte gratuit sur https://github.com et déposez-y ce dossier (bouton **Add file › Upload files**). Ne déposez jamais le fichier `.env`.
-2. Créez un compte sur https://render.com et connectez-le à GitHub.
-3. **New › Blueprint**, choisissez votre dépôt : Render lit `render.yaml` et prépare le site.
-4. Quand Render le demande, collez votre clé dans `ANTHROPIC_API_KEY`.
-5. Au bout de quelques minutes, le site est en ligne à une adresse du type `https://escale.onrender.com`.
+Créer un Web Service Python depuis ce dépôt. Choisir explicitement le plan **Free**.
 
-Le plan gratuit met le site en veille après 15 minutes sans visite : la première visite suivante prend environ une minute. Pour un site toujours prêt, passez au plan payant dans Render.
+- Build : `pip install -r requirements.txt`
+- Start : `uvicorn app:app --host 0.0.0.0 --port $PORT`
+- Secrets : `GROQ_API_KEY`, `TAVILY_API_KEY`
+- Facultatif : `ESCALE_ACCESS_CODE` pour limiter les visiteurs, `ESCALE_RATE_LIMIT_PER_HOUR` (12 par IP par défaut), `BOOKING_AFFILIATE_ID`.
 
-## 4. Votre propre nom de domaine
+Le fichier `render.yaml` fournit les mêmes réglages. Aucun disque ni base de données payants n'est nécessaire. Les limites de débit locales sont en mémoire et sont remises à zéro à chaque redémarrage. Elles ne remplacent pas les plafonds des fournisseurs. Un dépôt public importé par URL peut nécessiter un déploiement manuel après les futurs commits.
 
-1. Achetez un domaine (par exemple `escale-voyage.fr`) chez un registraire comme OVH, Gandi ou Namecheap.
-2. Dans Render : **Settings › Custom Domains › Add**, puis suivez les instructions DNS affichées.
+## Sources fournisseurs
 
-## 5. Réglages utiles
-
-| Réglage | Effet |
-|---|---|
-| `ESCALE_ACCESS_CODE` | Si rempli, les visiteurs doivent saisir ce code. Utile pendant les tests, pour que des inconnus ne consomment pas votre crédit API |
-| `BOOKING_AFFILIATE_ID` | Votre identifiant du programme partenaire Booking : il est ajouté aux liens Booking, ce qui vous permet de toucher une commission |
-| `ESCALE_RATE_LIMIT_PER_HOUR` | Nombre maximum de recherches par visiteur et par heure (12 par défaut) |
-| `ESCALE_MAX_WEB_SEARCHES` | Nombre maximum de recherches web par demande (8 par défaut) : moins = plus rapide et moins cher |
-
-## Sources : ce qui est branché, ce qui reste à faire
-
-- **Recherche web en direct (branchée)** : pour chaque demande, Claude cherche sur le web et vérifie que les adresses existent et sont ouvertes. Il consulte en priorité les sites du Michelin, du Fooding, du Routard, de Booking et d'Airbnb.
-- **Booking** : l'identifiant partenaire est pris en charge dans les liens. Pour les prix et les disponibilités en temps réel, il faut l'API Booking (Demand API), réservée aux partenaires acceptés : inscrivez-vous au programme partenaire de Booking. Une fois l'accès obtenu, on pourra la brancher.
-- **Airbnb** : pas d'API publique. Le site propose des liens de recherche Airbnb par quartier.
-- **Michelin, Le Fooding, Le Routard** : pas d'API publique. Leurs pages sont consultées via la recherche web ; reprendre leurs contenus (textes, notes) nécessiterait un accord de licence avec chaque éditeur.
+- https://www.tavily.com/pricing
+- https://help.tavily.com/articles/8298987937-billing-credits-usage-limits
+- https://console.groq.com/docs/rate-limits
+- https://console.groq.com/docs/billing-faqs
+- https://render.com/docs/free

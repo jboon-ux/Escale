@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Escale — votre assistant voyage privé</title>
-<meta name="description" content="Restaurants, bars, hébergements, activités ou voyage complet : Escale vous pose les bonnes questions et vous propose une sélection vérifiée en direct, dans n'importe quelle ville.">
+<meta name="description" content="Restaurants, bars, hébergements, activités ou voyage complet : Escale vous pose les bonnes questions et vous propose une sélection basée sur des sources web, dans n'importe quelle ville.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Crect%20width%3D%2248%22%20height%3D%2248%22%20rx%3D%2212%22%20fill%3D%22%23111111%22/%3E%3Cpath%20d%3D%22M12%2019.5L18.5%2013H36v22H18.5L12%2028.5z%22%20fill%3D%22%23F5D547%22/%3E%3Ccircle%20cx%3D%2218.5%22%20cy%3D%2224%22%20r%3D%222.4%22%20fill%3D%22%23111111%22/%3E%3Cpath%20d%3D%22M24%2020h8M24%2024h8M24%2028h5%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap">
@@ -176,7 +176,7 @@ dl{margin:0;display:flex;flex-direction:column;gap:2px}
 <footer>
   <div class="container">
     <span>© 2026 Escale · [MENTIONS LÉGALES] · [CONTACT]</span>
-    <span>Adresses vérifiées en ligne au moment de la recherche. Confirmez prix et disponibilités avant de réserver.</span>
+    <span>Recherche web Tavily et IA Groq. Vos critères leur sont transmis : ne saisissez pas de données sensibles. Confirmez horaires, prix et disponibilités avant de réserver.</span>
   </div>
 </footer>
 
@@ -365,9 +365,10 @@ async function generate(refineText){
 }
 
 const ERR = {
-  not_configured:"Le site n’est pas encore relié à Claude : la clé API n’est pas configurée sur le serveur.",
+  not_configured:"Les clés de recherche ou d’IA ne sont pas configurées sur le serveur.",
   need_code:"Ce site est réservé pour le moment. Entrez le code d’accès que l’on vous a donné.",
-  rate_limited:"Trop de recherches en peu de temps. Patientez un peu, puis relancez.",
+  rate_limited:"Limite gratuite atteinte (par heure, jour ou mois). Réessayez plus tard : aucun passage payant automatique.",
+  no_sources:"Pas assez de sources fiables pour cette demande. Précisez la ville ou élargissez vos critères.",
   invalid_json:"La réponse n’a pas pu être lue. Relancez la recherche.",
   refused:"Cette demande n’a pas pu être traitée. Reformulez vos précisions et relancez.",
   upstream_error:"La recherche n’a pas abouti. Vérifiez votre connexion, puis relancez."
@@ -377,6 +378,7 @@ function linkFor(it){
   const city = (S.answers.lieu || [])[0] || '';
   const q = encodeURIComponent((it.name || '') + ' ' + city);
   const src = it.sources || [];
+  if (/^https?:\/\//.test(String(it.url || ''))) return it.url;
   if (it.category === 'logement' && src.includes('Airbnb')) return 'https://www.airbnb.fr/s/' + encodeURIComponent(((it.area||'') + ' ' + city).trim()) + '/homes';
   if (it.category === 'logement') return 'https://www.booking.com/searchresults.fr.html?ss=' + q + (CONFIG.bookingAid ? '&aid=' + encodeURIComponent(CONFIG.bookingAid) : '');
   if (/^https:\/\//.test(String(it.url || ''))) return it.url;
@@ -398,7 +400,7 @@ function renderHome(){
       h('div',{style:'display:flex;flex-direction:column;gap:14px'},
         h('span',{class:'eyebrow',text:'Assistant voyage privé'}),
         h('h1',{id:'hero-t'},'Les bonnes adresses, ', h('mark',{class:'hl',text:'où que vous alliez.'})),
-        h('p',{class:'lead',text:'Restaurant, bar, hébergement, activités ou voyage complet : Escale vous pose les bonnes questions, puis vous propose une sélection classée et vérifiée en direct, dans n’importe quelle ville.'})),
+        h('p',{class:'lead',text:'Restaurant, bar, hébergement, activités ou voyage complet : Escale vous pose les bonnes questions, puis vous propose une sélection classée à partir de sources web, dans n’importe quelle ville.'})),
       h('div',{class:'tiles'}, TILES.map(t => h('button',{class:'tile' + (t.featured ? ' featured' : ''),type:'button',onclick:()=>start(t.k)},
         svg(t.i), h('b',{text:t.t}), h('span',{text:t.s}))))),
     h('section',{class:'how',id:'comment','aria-labelledby':'how-t'},
@@ -406,9 +408,9 @@ function renderHome(){
       h('ol',{class:'steps'},
         h('li',null,h('b',{text:'Vous choisissez votre demande'}),h('span',{text:'Un restaurant ce soir, un bar à vin, un hôtel pour le week-end ou tout un voyage.'})),
         h('li',null,h('b',{text:'Escale affine avec vous'}),h('span',{text:'Budget, goûts, ambiance, régime, accessibilité : quelques questions, avec vos précisions libres.'})),
-        h('li',null,h('b',{text:'Vous recevez votre sélection'}),h('span',{text:'Des listes classées, vérifiées sur les guides et les plateformes au moment de la recherche, avec un lien pour réserver.'})))),
-    h('section',{class:'sources','aria-label':'Sources consultées'},
-      h('span',{text:'Sources consultées :'}),
+        h('li',null,h('b',{text:'Vous recevez votre sélection'}),h('span',{text:'Des listes classées à partir de résultats web, avec les sources. Vérifiez les détails sur le site avant de réserver.'})))),
+    h('section',{class:'sources','aria-label':'Guides possibles'},
+      h('span',{text:'Guides possibles :'}),
       h('div',{class:'tags'}, Object.keys(SOURCES).map(x => h('span',{class:'tag'}, h('i',{style:'background:var(' + SOURCES[x] + ')'}), x)))));
 }
 
@@ -474,7 +476,7 @@ function renderOutcome(thread){
   if (S.lastAsk) thread.append(h('div',{class:'msg user'}, S.lastAsk));
   if (S.loading){
     thread.append(h('div',{class:'card loading',role:'status'}, h('div',{class:'dots','aria-hidden':'true'},h('i'),h('i'),h('i')),
-      h('div',{style:'flex:1;min-width:0'}, h('div',{text:'Escale vérifie les adresses en direct…'}), h('div',{class:'note',text:'Recherche sur les guides et les plateformes : comptez 1 à 2 minutes.'})),
+      h('div',{style:'flex:1;min-width:0'}, h('div',{text:'Escale recherche des sources sur le web…'}), h('div',{class:'note',text:'Recherche Tavily et synthèse Groq : comptez environ une minute.'})),
       h('button',{class:'btn',type:'button',onclick:()=>{ if (ctl) ctl.abort(); }}, 'Arrêter')));
     return;
   }
@@ -495,6 +497,7 @@ function priceOf(p){ const n = Math.max(1, Math.min(4, String(p||'').replace(/[^
 
 function renderResult(thread, r){
   if (r.summary) thread.append(h('div',{class:'msg bot'}, String(r.summary)));
+  thread.append(h('div',{class:'note',text:'Vos critères sont transmis à Tavily (recherche web) et Groq (IA). Ne saisissez pas de données sensibles. Les horaires, prix et disponibilités restent à confirmer.'}));
   const needsAccess = (S.answers.access || []).length > 0;
   (r.sections||[]).forEach(sec => {
     const items = Array.isArray(sec.items) ? sec.items : [];
@@ -525,6 +528,10 @@ function renderResult(thread, r){
   if (tips.length) thread.append(h('section',{class:'card'},
     h('div',{class:'card-h'}, h('h2',{text:'Conseils pratiques'})),
     h('ul',{class:'tips'}, tips.map(t => h('li',{text:String(t)})))));
+
+  if (Array.isArray(r.web_sources) && r.web_sources.length) thread.append(h('section',{class:'card'},
+    h('div',{class:'card-h'},h('h2',{text:'Sources web de cette recherche'})),
+    h('ul',{class:'tips'},r.web_sources.map(s=>h('li',null,h('a',{href:s.url,target:'_blank',rel:'noopener noreferrer'},String(s.title||s.url)))))));
 
   const box = h('div',{style:'display:flex;flex-direction:column;gap:10px'});
   box.append(h('div',{class:'chips'}, ['Moins cher','Plus central','D’autres adresses','Plus d’options végétariennes','Plus accessible'].map(t =>
@@ -559,7 +566,7 @@ function renderBrief(f){
       h('div',{class:'split'}, sp.map((p,i)=>h('div',{style:'width:'+p+'%;background:'+cols[i]}))),
       labels.map((l,i)=>h('div',{class:'legend'}, h('span',{style:'display:flex;align-items:center;gap:8px'}, h('i',{style:'width:10px;height:10px;border-radius:3px;background:'+cols[i]}), l), h('strong',{text:sp[i]+' %'})))));
   }
-  aside.append(h('div',{class:'sep'}, h('strong',{style:'font-size:13px',text:'Sources consultées'}),
+  aside.append(h('div',{class:'sep'}, h('strong',{style:'font-size:13px',text:'Guides possibles'}),
     h('div',{class:'tags'}, Object.keys(SOURCES).map(x => h('span',{class:'tag'}, h('i',{style:'background:var(' + SOURCES[x] + ')'}), x)))));
   return aside;
 }
